@@ -1,0 +1,6 @@
+{
+  "random_forest": 73.9,
+  "logistic": 73.44,
+  "decision_tree": 73.28,
+  "svm": 73.62
+}
