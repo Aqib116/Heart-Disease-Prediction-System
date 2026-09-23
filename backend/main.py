@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 import joblib
 import pandas as pd
 import json
@@ -59,6 +59,10 @@ class PredictionInput(BaseModel):
     alco: int
     active: int
     algorithm: str = "random_forest"
+    # Optional list of algorithms picked by the super admin. When more than
+    # one is provided, the model with the highest known accuracy (see
+    # model_metrics.json) is used to produce the answer.
+    algorithms: Optional[List[str]] = None
 
 @app.get("/")
 def read_root():
@@ -70,10 +74,22 @@ def get_model_metrics():
 
 @app.post("/predict")
 def predict(data: PredictionInput):
-    if data.algorithm not in models:
-        return {"error": f"Unknown algorithm: {data.algorithm}"}
+    # Figure out which algorithm(s) were selected by the super admin.
+    # - If a list was sent (one or many selected), use it.
+    # - Otherwise fall back to the single legacy `algorithm` field.
+    selected = [a for a in (data.algorithms or []) if a]
+    if not selected:
+        selected = [data.algorithm]
 
-    model = models[data.algorithm]
+    unknown = [a for a in selected if a not in models]
+    if unknown:
+        return {"error": f"Unknown algorithm(s): {', '.join(unknown)}"}
+
+    # When multiple algorithms are selected, pick the one with the best
+    # (highest) known accuracy from model_metrics.json to answer with.
+    best_algorithm = max(selected, key=lambda a: model_metrics.get(a, 0))
+
+    model = models[best_algorithm]
 
     bmi = data.weight / ((data.height / 100) ** 2)
 
@@ -92,7 +108,7 @@ def predict(data: PredictionInput):
         'bmi': bmi,
     }])[FEATURES]
 
-    if data.algorithm in NEEDS_SCALING:
+    if best_algorithm in NEEDS_SCALING:
         row = scaler.transform(row)
 
     prediction = model.predict(row)[0]
@@ -111,7 +127,8 @@ def predict(data: PredictionInput):
         "risk_percent": risk_percent,
         "risk_level": risk_level,
         "bmi": round(bmi, 1),
-        "algorithm_used": data.algorithm,
+        "algorithm_used": best_algorithm,
+        "algorithms_considered": selected,
     }
 
 

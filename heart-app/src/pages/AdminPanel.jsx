@@ -113,7 +113,7 @@ function AdminSidebar({ active, setActive, adminUser, isSuperAdmin, adminLogout 
 
 // ---- Dashboard View ----
 
-function DashboardView({ users, predictionsInfo, activeAlgorithm }) {
+function DashboardView({ users, predictionsInfo, activeAlgorithms }) {
   const userList = Object.entries(users || {})
   const totalUsers = userList.length
   const recentUsers = userList.slice(-5).reverse()
@@ -344,7 +344,7 @@ function DatasetView({ users, predictionsInfo, exportDataset, clearAllData }) {
 
 // ---- Model Selection View (Super Admin only) ----
 
-function ModelView({ activeAlgorithm, setActiveAlgorithm }) {
+function ModelView({ activeAlgorithms, setActiveAlgorithms }) {
   const [metrics, setMetrics] = useState({})
 
   useEffect(() => {
@@ -361,11 +361,33 @@ function ModelView({ activeAlgorithm, setActiveAlgorithm }) {
     { value: 'svm', label: 'Support Vector Machine (SVM)' },
   ]
 
+  const isChecked = (value) => activeAlgorithms.includes(value)
+
+  const toggleAlgorithm = (value) => {
+    if (isChecked(value)) {
+      // Never allow removing the last remaining selection.
+      if (activeAlgorithms.length === 1) return
+      setActiveAlgorithms(activeAlgorithms.filter(a => a !== value))
+    } else {
+      setActiveAlgorithms([...activeAlgorithms, value])
+    }
+  }
+
+  // The model that will actually answer when more than one is selected:
+  // the one with the highest known accuracy among the selected models.
+  const bestSelected = activeAlgorithms.reduce((best, a) => {
+    const acc = metrics[a] ?? 0
+    return acc > (metrics[best] ?? 0) ? a : best
+  }, activeAlgorithms[0])
+
   return (
     <div className="card">
       <h3 style={{ marginBottom: '4px', fontSize: '16px' }}>ML Model Selection</h3>
+      <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+        Select one model, or several — if several are selected, the most accurate one among them answers each prediction.
+      </p>
       <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-        Currently active model: <span className="badge badge-gold">{activeAlgorithm}</span>
+        Currently answering with: <span className="badge badge-gold">{bestSelected}</span>
       </p>
 
       {algorithms.map(algo => (
@@ -378,17 +400,17 @@ function ModelView({ activeAlgorithm, setActiveAlgorithm }) {
             padding: '12px',
             marginBottom: '8px',
             borderRadius: '8px',
-            border: `1px solid ${activeAlgorithm === algo.value ? 'var(--gold)' : 'var(--border-color)'}`,
+            border: `1px solid ${isChecked(algo.value) ? 'var(--gold)' : 'var(--border-color)'}`,
             cursor: 'pointer',
           }}
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <input
-              type="radio"
+              type="checkbox"
               name="algorithm"
               value={algo.value}
-              checked={activeAlgorithm === algo.value}
-              onChange={() => setActiveAlgorithm(algo.value)}
+              checked={isChecked(algo.value)}
+              onChange={() => toggleAlgorithm(algo.value)}
             />
             {algo.label}
           </span>
@@ -534,7 +556,7 @@ function MaintenanceView({ createBackup, restoreBackup }) {
 // ---- Main AdminPanel ----
 export default function AdminPanel() {
   const {
-    adminUser, adminLogout, activeAlgorithm, setActiveAlgorithm,
+    adminUser, adminLogout, activeAlgorithms, setActiveAlgorithms,
     accounts, approveAdmin, rejectAdmin, updateAdminProfile, changeAdminPassword,
   } = useAdmin()
 
@@ -586,7 +608,7 @@ export default function AdminPanel() {
             <DashboardView
               users={users}
               predictionsInfo={getPredictionsInfo(users)}
-              activeAlgorithm={activeAlgorithm}
+              activeAlgorithms={activeAlgorithms}
               adminLogout={adminLogout}
             />
           )}
@@ -617,7 +639,7 @@ export default function AdminPanel() {
           )}
 
           {active === 'model' && isSuperAdmin && (
-            <ModelView activeAlgorithm={activeAlgorithm} setActiveAlgorithm={setActiveAlgorithm} />
+            <ModelView activeAlgorithms={activeAlgorithms} setActiveAlgorithms={setActiveAlgorithms} />
           )}
 
           {active === 'admins' && isSuperAdmin && (

@@ -36,7 +36,9 @@ function loadAdminSession() {
 export function AdminProvider({ children }) {
   const [accounts, setAccounts] = useState({})
   const [adminUser, setAdminUser] = useState(() => loadAdminSession())
-  const [activeAlgorithm, setActiveAlgorithmState] = useState('random_forest')
+  // Super admin can pick one or several algorithms. Stored/transmitted as a
+  // comma-separated string, kept in state as an array.
+  const [activeAlgorithms, setActiveAlgorithmsState] = useState(['random_forest'])
 
   const refreshAccounts = async () => {
     const data = await apiGet('/api/admin/accounts')
@@ -46,7 +48,10 @@ export function AdminProvider({ children }) {
   useEffect(() => {
     refreshAccounts()
     apiGet('/api/settings/active-algorithm').then(data => {
-      if (data?.value) setActiveAlgorithmState(data.value)
+      if (data?.value) {
+        const parsed = String(data.value).split(',').map(v => v.trim()).filter(Boolean)
+        if (parsed.length) setActiveAlgorithmsState(parsed)
+      }
     })
   }, [])
 
@@ -84,9 +89,12 @@ export function AdminProvider({ children }) {
     return apiPost(`/api/admin/change-password/${encodeURIComponent(adminUser.email)}`, { currentPassword, newPassword })
   }
 
-  const setActiveAlgorithm = async (algo) => {
-    setActiveAlgorithmState(algo)
-    await apiPost('/api/settings/active-algorithm', { value: algo })
+  // Accepts an array of one or more algorithm keys.
+  const setActiveAlgorithms = async (algos) => {
+    const list = Array.isArray(algos) ? algos : [algos]
+    if (!list.length) return // must always keep at least one selected
+    setActiveAlgorithmsState(list)
+    await apiPost('/api/settings/active-algorithm', { value: list.join(',') })
   }
 
   const approveAdmin = async (email) => {
@@ -105,7 +113,7 @@ export function AdminProvider({ children }) {
 
   const value = {
     adminUser, adminRegister, adminLogin, adminLogout,
-    activeAlgorithm, setActiveAlgorithm,
+    activeAlgorithms, setActiveAlgorithms,
     accounts, approveAdmin, rejectAdmin,
     updateAdminProfile, changeAdminPassword,
   }

@@ -8,7 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
 export default function DashboardPage() {
   const { user, profile, profileLoaded, addPrediction } = useAuth()
-  const { activeAlgorithm } = useAdmin()
+  const { activeAlgorithms } = useAdmin()
   const navigate = useNavigate()
 
   const [form, setForm] = useState({
@@ -61,7 +61,7 @@ export default function DashboardPage() {
           smoke: parseInt(form.smoke),
           alco: parseInt(form.alco),
           active: parseInt(form.active),
-          algorithm: activeAlgorithm,
+          algorithms: activeAlgorithms,
         }),
       })
 
