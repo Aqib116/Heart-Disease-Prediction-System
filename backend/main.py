@@ -14,8 +14,7 @@ app = FastAPI()
 
 db.init_db()
 
-# Local dev origins + any origin(s) set via env var (comma separated), e.g.
-# FRONTEND_ORIGIN=https://your-app.vercel.app
+
 _default_origins = ["http://localhost:5173"]
 _env_origins = [o.strip() for o in os.environ.get("FRONTEND_ORIGIN", "").split(",") if o.strip()]
 
@@ -59,9 +58,7 @@ class PredictionInput(BaseModel):
     alco: int
     active: int
     algorithm: str = "random_forest"
-    # Optional list of algorithms picked by the super admin. When more than
-    # one is provided, the model with the highest known accuracy (see
-    # model_metrics.json) is used to produce the answer.
+    
     algorithms: Optional[List[str]] = None
 
 @app.get("/")
@@ -74,9 +71,7 @@ def get_model_metrics():
 
 @app.post("/predict")
 def predict(data: PredictionInput):
-    # Figure out which algorithm(s) were selected by the super admin.
-    # - If a list was sent (one or many selected), use it.
-    # - Otherwise fall back to the single legacy `algorithm` field.
+    
     selected = [a for a in (data.algorithms or []) if a]
     if not selected:
         selected = [data.algorithm]
@@ -132,9 +127,8 @@ def predict(data: PredictionInput):
     }
 
 
-# =====================================================================
-# Database-backed models (replaces localStorage) — SQLite
-# =====================================================================
+
+# Database-backed SQLite
 
 class AuthInput(BaseModel):
     email: str
@@ -185,8 +179,7 @@ class SettingInput(BaseModel):
 
 
 def simple_hash(s: str) -> str:
-    # Mirrors the frontend's old simpleHash() so existing admin password
-    # semantics stay the same (basic, not intended as strong crypto).
+  
     h = 0
     for ch in s:
         h = (31 * h + ord(ch)) & 0xFFFFFFFF
@@ -207,7 +200,7 @@ def simple_hash(s: str) -> str:
     return ("-" + out) if neg else out
 
 
-# ---- Users ----
+# User 
 
 @app.post("/api/register")
 def api_register(data: AuthInput):
@@ -295,7 +288,7 @@ def api_delete_account(email: str):
     return {"success": True}
 
 
-# ---- Profile ----
+# Profile 
 
 @app.get("/api/profile/{email}")
 def api_get_profile(email: str):
@@ -319,7 +312,7 @@ def api_save_profile(email: str, data: ProfileInput):
     return {"success": True}
 
 
-# ---- Predictions ----
+# Predictions
 
 @app.get("/api/predictions/{email}")
 def api_get_predictions(email: str):
@@ -395,7 +388,7 @@ def api_dataset():
     return out
 
 
-# ---- Admin accounts ----
+# Admin accounts 
 
 @app.post("/api/admin/register")
 def api_admin_register(data: AdminRegisterInput):
@@ -482,7 +475,7 @@ def api_admin_change_password(email: str, data: ChangePasswordInput):
     return {"success": True}
 
 
-# ---- Settings (active algorithm) ----
+# Settings (active algorithm) 
 
 @app.get("/api/settings/active-algorithm")
 def api_get_active_algorithm():
@@ -504,7 +497,7 @@ def api_set_active_algorithm(data: SettingInput):
     return {"success": True}
 
 
-# ---- Backup / Restore ----
+# Backup / Restore 
 
 @app.get("/api/backup")
 def api_backup():

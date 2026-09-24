@@ -39,8 +39,7 @@ export default function AccountSettingsPage() {
 
   const [showDelete, setShowDelete] = useState(false)
 
-  // Profile now loads asynchronously from the database, so fill the form
-  // fields in once it arrives (covers the case of landing here directly).
+  
   useEffect(() => {
     if (profile) {
       setName(profile.name || '')

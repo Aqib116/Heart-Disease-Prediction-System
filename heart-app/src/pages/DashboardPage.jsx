@@ -20,9 +20,7 @@ export default function DashboardPage() {
   const [apiError, setApiError] = useState('')
 
   useEffect(() => {
-    // Wait until the profile has actually finished loading from the
-    // database before deciding the user needs to set one up — otherwise
-    // we'd redirect every time during the brief async fetch.
+    
     if (profileLoaded && !profile) {
       navigate('/profile-setup')
     }

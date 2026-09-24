@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAdmin } from '../context/AdminContext'
 import { useAuth } from '../context/AuthContext'
 
-// ---- Sidebar ----
+// Sidebar 
 
 function SidebarItem({ label, active, onClick }) {
   return (
@@ -111,7 +111,7 @@ function AdminSidebar({ active, setActive, adminUser, isSuperAdmin, adminLogout 
   )
 }
 
-// ---- Dashboard View ----
+// Dashboard View 
 
 function DashboardView({ users, predictionsInfo, activeAlgorithms }) {
   const userList = Object.entries(users || {})
@@ -163,7 +163,7 @@ function DashboardView({ users, predictionsInfo, activeAlgorithms }) {
   )
 }
 
-// ---- Profile View ----
+// Profile View 
 
 function ProfileView({ adminUser, updateAdminProfile, changeAdminPassword }) {
   const [name, setName] = useState(adminUser?.name || '')
@@ -239,7 +239,7 @@ function ProfileView({ adminUser, updateAdminProfile, changeAdminPassword }) {
   )
 }
 
-// ---- Users View ----
+// Users View
 
 function UsersView({ users, banUser, unbanUser, deleteUser }) {
   const userList = Object.entries(users || {})
@@ -293,7 +293,7 @@ function UsersView({ users, banUser, unbanUser, deleteUser }) {
   )
 }
 
-// ---- Dataset View ----
+// Dataset View
 
 function DatasetView({ users, predictionsInfo, exportDataset, clearAllData }) {
   const [confirmClear, setConfirmClear] = useState(false)
@@ -342,7 +342,7 @@ function DatasetView({ users, predictionsInfo, exportDataset, clearAllData }) {
   )
 }
 
-// ---- Model Selection View (Super Admin only) ----
+// Model Selection View (Super Admin only)
 
 function ModelView({ activeAlgorithms, setActiveAlgorithms }) {
   const [metrics, setMetrics] = useState({})
@@ -373,8 +373,8 @@ function ModelView({ activeAlgorithms, setActiveAlgorithms }) {
     }
   }
 
-  // The model that will actually answer when more than one is selected:
-  // the one with the highest known accuracy among the selected models.
+  
+
   const bestSelected = activeAlgorithms.reduce((best, a) => {
     const acc = metrics[a] ?? 0
     return acc > (metrics[best] ?? 0) ? a : best
@@ -423,7 +423,7 @@ function ModelView({ activeAlgorithms, setActiveAlgorithms }) {
   )
 }
 
-// ---- Admin Accounts View (Super Admin only) ----
+// Admin Accounts View (Super Admin only)
 
 function AdminAccountsView({ accounts, approveAdmin, rejectAdmin }) {
   const allAdmins = Object.entries(accounts || {})
@@ -484,7 +484,7 @@ function AdminAccountsView({ accounts, approveAdmin, rejectAdmin }) {
   )
 }
 
-// ---- Maintenance View ----
+// Maintenance View
 
 function MaintenanceView({ createBackup, restoreBackup }) {
   const [restoreMsg, setRestoreMsg] = useState('')
@@ -553,7 +553,7 @@ function MaintenanceView({ createBackup, restoreBackup }) {
 }
 
 
-// ---- Main AdminPanel ----
+// Main AdminPanel
 export default function AdminPanel() {
   const {
     adminUser, adminLogout, activeAlgorithms, setActiveAlgorithms,

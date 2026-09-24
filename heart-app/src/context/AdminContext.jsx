@@ -24,8 +24,6 @@ async function apiDelete(path) {
   return res.json()
 }
 
-// Only the active admin session pointer stays in localStorage; everything
-// else (admin accounts, active algorithm, approvals) lives in the database.
 function loadAdminSession() {
   const data = localStorage.getItem('hdp_admin_session')
   return data ? JSON.parse(data) : null
@@ -36,8 +34,7 @@ function loadAdminSession() {
 export function AdminProvider({ children }) {
   const [accounts, setAccounts] = useState({})
   const [adminUser, setAdminUser] = useState(() => loadAdminSession())
-  // Super admin can pick one or several algorithms. Stored/transmitted as a
-  // comma-separated string, kept in state as an array.
+ 
   const [activeAlgorithms, setActiveAlgorithmsState] = useState(['random_forest'])
 
   const refreshAccounts = async () => {
@@ -89,7 +86,6 @@ export function AdminProvider({ children }) {
     return apiPost(`/api/admin/change-password/${encodeURIComponent(adminUser.email)}`, { currentPassword, newPassword })
   }
 
-  // Accepts an array of one or more algorithm keys.
   const setActiveAlgorithms = async (algos) => {
     const list = Array.isArray(algos) ? algos : [algos]
     if (!list.length) return // must always keep at least one selected

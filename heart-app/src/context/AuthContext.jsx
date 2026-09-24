@@ -4,7 +4,7 @@ const AuthContext = createContext(null)
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
-// ---- Helpers: talk to the backend (SQLite database) instead of localStorage ----
+
 
 async function apiGet(path) {
   const res = await fetch(`${API_URL}${path}`)
@@ -26,14 +26,12 @@ async function apiDelete(path) {
   return res.json()
 }
 
-// Only the current logged-in email is kept in localStorage, as a lightweight
-// session pointer (this is normal even with a real database/backend — the
-// actual user/profile/prediction data all lives in SQLite now, not here).
+
 function loadSessionEmail() {
   return localStorage.getItem('hdp_current_user')
 }
 
-// ---- AuthProvider ----
+// AuthProvider
 
 export function AuthProvider({ children }) {
   const [users, setUsers] = useState({})
@@ -56,13 +54,13 @@ export function AuthProvider({ children }) {
     setPredictionsInfo(data || { total: 0, highRisk: 0, perUser: {} })
   }
 
-  // Load the admin-facing lists once on mount (used by AdminPanel)
+  
   useEffect(() => {
     refreshUsers()
     refreshStats()
   }, [])
 
-  // Load this user's profile + predictions whenever they log in
+
   useEffect(() => {
     if (!user) {
       setProfile(null)
@@ -159,7 +157,6 @@ export function AuthProvider({ children }) {
     refreshStats()
   }
 
-  // Used by AdminPanel: total/highRisk/perUser counts (kept in state, refreshed from DB)
   const getPredictionsInfo = () => predictionsInfo
 
   const exportDataset = async () => {
